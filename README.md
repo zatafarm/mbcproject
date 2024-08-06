@@ -24,3 +24,5 @@ Data Format: XML, Json<br>
 
 발표 자료
 <a href="https://drive.google.com/file/d/1cZD2Rbf5yuYPOphUQLUuSs0ftN7oPB7O/view?usp=drive_link">https://drive.google.com/file/d/1cZD2Rbf5yuYPOphUQLUuSs0ftN7oPB7O/view?usp=drive_link</a>
+[시연 영상](https://www.youtube.com/watch?v=ropiT0xXrmI)
+
