@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mbc.academy.aprvMapper">
+
+	<!-- 전체 신청 내역 aprvList 기본값 -->
+	<select id="aprvList" resultType="AprvDTO"
+		parameterType="AprvCriteria">
+		SELECT * FROM (
+		SELECT a.pno, a.empno, e1.ename AS reqnm, e1.dept,
+		e2.ename AS aprvnm,
+		c2.codenm as deptnm, a.ptotp, c3.codenm as ptotpnm,
+		a.stts, c1.codenm
+		AS sttsnm, a.usp, a.rjctnrea, a.reqdt, a.apprvldt
+		FROM
+		aprv a
+		JOIN emp e1 ON
+		a.empno = e1.empno
+		LEFT JOIN emp e2 ON
+		a.apprver =
+		e2.empno
+		JOIN ptoinfo p ON a.empno = p.empno
+		JOIN code c1 ON
+		a.stts =
+		c1.codenum
+		JOIN code c2 ON e1.dept = c2.codenum
+		JOIN code c3 ON
+		a.ptotp
+		= c3.codenum
+		<choose>
+			<when test="sesAdmns == 3">
+				WHERE e1.dept = #{sesDept}
+				<if test="searchField != null and searchField != ''">
+					AND
+				</if>
+			</when>
+			<when test="searchField != null and searchField != ''">
+				WHERE
+			</when>
+		</choose>
+		<if test="searchField != null and searchField != ''">
+			<if test="searchField == 'stts'"> a.stts LIKE CONCAT('%', #{keyword}, '%') </if>
+			<if test="searchField == 'ptotp'"> a.ptotp LIKE CONCAT('%', #{keyword}, '%') </if>
+			<if test="searchField == 'reqnm'"> e1.ename LIKE CONCAT('%', #{keyword}, '%') </if>
+			<if test="searchField == 'aprvnm'"> e2.ename LIKE CONCAT('%', #{keyword}, '%') </if>
+			<if test="searchField == 'reqdt'"> a.reqdt BETWEEN DATE(#{keyword}) AND
+				DATE_ADD(DATE(#{keyword2}), INTERVAL 1 DAY)
+			</if>
+			<if test="searchField == 'apprvldt'"> a.apprvldt BETWEEN DATE(#{keyword}) AND
+				DATE_ADD(DATE(#{keyword2}), INTERVAL 1 DAY)
+			</if>
+		</if>
+		) AS result
+		ORDER BY
+		<choose>
+			<when test="column == 'stts'"> result.stts ${sortOrder} </when>
+			<when test="column == 'ptotp'"> result.ptotp ${sortOrder} </when>
+			<when test="column == 'reqnm'"> result.reqnm ${sortOrder} </when>
+			<when test="column == 'aprvnm'"> result.aprvnm ${sortOrder} </when>
+			<when test="column == 'reqdt'"> result.reqdt ${sortOrder} </when>
+			<when test="column == 'apprvldt'"> result.apprvldt ${sortOrder} </when>
+			<otherwise> result.stts ASC</otherwise>
+		</choose>
+		, result.pno ASC
+		LIMIT #{pageStart}, #{perPageNum}
+	</select>
+
+	<!-- 전체 레코드 수 aprvList -->
+	<select id="getTotalCountAprv" resultType="int"
+		parameterType="AprvCriteria">
+		SELECT COUNT(*)
+		FROM
+		aprv a
+		JOIN emp e1 ON a.empno = e1.empno
+		LEFT JOIN
+		emp e2 ON a.apprver = e2.empno
+		<choose>
+			<when test="sesAdmns == 3">
+				WHERE e1.dept = #{sesDept}
+			</when>
+			<when test="searchField != null and searchField != ''">
+				WHERE
+			</when>
+		</choose>
+		<if test="searchField != null and searchField != ''">
+			<if test="sesAdmns == 3">AND</if>
+			<choose>
+				<when test="searchField == 'stts'">
+					a.stts LIKE CONCAT('%', #{keyword}, '%')
+				</when>
+				<when test="searchField == 'ptotp'">
+					a.ptotp LIKE CONCAT('%', #{keyword}, '%')
+				</when>
+				<when test="searchField == 'reqnm'">
+					e1.ename LIKE CONCAT('%', #{keyword}, '%')
+				</when>
+				<when test="searchField == 'aprvnm'">
+					e2.ename LIKE CONCAT('%', #{keyword}, '%')
+				</when>
+				<when test="searchField == 'reqdt'">
+					a.reqdt BETWEEN DATE(#{keyword}) AND
+					DATE_ADD(DATE(#{keyword2}), INTERVAL 1 DAY)
+				</when>
+				<when test="searchField == 'apprvldt'">
+					a.apprvldt BETWEEN DATE(#{keyword}) AND
+					DATE_ADD(DATE(#{keyword2}), INTERVAL 1 DAY)
+				</when>
+			</choose>
+		</if>
+	</select>
+	
+		<!-- aprvList 메인페이지 -->
+	<select id="aprvListMain" resultType="AprvDTO" parameterType="AprvCriteria">
+		SELECT a.pno, a.empno, e1.ename AS reqnm, e1.dept,
+		e2.ename AS aprvnm,
+		c2.codenm as deptnm, a.ptotp, c3.codenm as ptotpnm,
+		a.stts, c1.codenm
+		AS sttsnm, a.usp, a.rjctnrea, a.reqdt, a.apprvldt
+		FROM
+		aprv a
+		JOIN emp e1 ON
+		a.empno = e1.empno
+		LEFT JOIN emp e2 ON
+		a.apprver =
+		e2.empno
+		JOIN ptoinfo p ON a.empno = p.empno
+		JOIN code c1 ON
+		a.stts =
+		c1.codenum
+		JOIN code c2 ON e1.dept = c2.codenum
+		JOIN code c3 ON
+		a.ptotp
+		= c3.codenum
+		<if test="sesAdmns == 3">
+			WHERE e1.dept = #{sesDept}
+			AND a.stts = 'P0'
+		</if>
+		<if test="sesAdmns == 2">
+			WHERE a.stts ='P1'
+		</if>
+		ORDER BY
+		a.pno ASC
+		LIMIT 0,5
+	</select>
+
+	<!-- 전체 신청 내역 ptoList -->
+	<select id="ptoList" resultType="AprvDTO"
+		parameterType="AprvCriteria">
+		SELECT
+		*
+		FROM (
+		SELECT
+		a.pno,
+		a.empno,
+		e1.ename AS reqnm,
+		e1.dept,
+		e2.ename AS
+		aprvnm,
+		c2.codenm AS deptnm,
+		a.ptotp,
+		c3.codenm AS ptotpnm,
+		a.stts,
+		c1.codenm AS sttsnm,
+		a.usp,
+		a.rjctnrea,
+		a.reqdt,
+		a.apprvldt
+		FROM aprv a
+		JOIN emp e1 ON a.empno = e1.empno
+		LEFT JOIN emp e2 ON a.apprver =
+		e2.empno
+		JOIN ptoinfo p ON a.empno = p.empno
+		JOIN code c1 ON a.stts =
+		c1.codenum
+		JOIN code c2 ON e1.dept = c2.codenum
+		JOIN code c3 ON a.ptotp
+		= c3.codenum
+		WHERE a.empno = #{sesEmpno}
+		<if test="searchField != null and searchField != ''">
+			<choose>
+				<when test="searchField == 'stts'">
+					AND a.stts LIKE CONCAT('%', #{keyword}, '%')
+				</when>
+				<when test="searchField == 'ptotp'">
+					AND a.ptotp LIKE CONCAT('%', #{keyword}, '%')
+				</when>
+				<when test="searchField == 'aprvnm'">
+					AND e2.ename LIKE CONCAT('%', #{keyword}, '%')
+				</when>
+				<when test="searchField == 'reqdt'">
+					AND a.reqdt BETWEEN DATE(#{keyword}) AND
+					DATE_ADD(DATE(#{keyword2}), INTERVAL 1 DAY)
+				</when>
+				<when test="searchField == 'apprvldt'">
+					AND a.apprvldt BETWEEN DATE(#{keyword}) AND
+					DATE_ADD(DATE(#{keyword2}), INTERVAL 1 DAY)
+				</when>
+			</choose>
+		</if>
+		) AS result
+		ORDER BY
+		<choose>
+			<when test="column == 'stts'"> result.stts ${sortOrder} </when>
+			<when test="column == 'ptotp'"> result.ptotp ${sortOrder} </when>
+			<when test="column == 'reqnm'"> result.reqnm ${sortOrder} </when>
+			<when test="column == 'aprvnm'"> result.aprvnm ${sortOrder} </when>
+			<when test="column == 'reqdt'"> result.reqdt ${sortOrder} </when>
+			<when test="column == 'apprvldt'"> result.apprvldt ${sortOrder} </when>
+			<otherwise> result.stts ASC</otherwise>
+		</choose>
+		, result.pno ASC
+		LIMIT #{pageStart},
+		#{perPageNum}
+	</select>
+
+	<!-- 전체 레코드 수 ptoList -->
+	<select id="getTotalCountPto" resultType="int"
+		parameterType="AprvCriteria">
+		SELECT COUNT(*)
+		FROM aprv a
+		JOIN emp e1 ON a.empno = e1.empno
+		LEFT JOIN
+		emp e2 ON a.apprver = e2.empno
+		WHERE a.empno = #{sesEmpno}
+		<if test="searchField != null and searchField != ''">
+			<choose>
+				<when test="searchField == 'stts'">
+					AND a.stts LIKE CONCAT('%', #{keyword}, '%')
+				</when>
+				<when test="searchField == 'ptotp'">
+					AND a.ptotp LIKE CONCAT('%', #{keyword}, '%')
+				</when>
+				<when test="searchField == 'aprvnm'">
+					AND e2.ename LIKE CONCAT('%', #{keyword}, '%')
+				</when>
+				<when test="searchField == 'reqdt'">
+					AND a.reqdt BETWEEN DATE(#{keyword}) AND
+					DATE_ADD(DATE(#{keyword2}), INTERVAL 1 DAY)
+				</when>
+				<when test="searchField == 'apprvldt'">
+					AND a.apprvldt BETWEEN DATE(#{keyword}) AND
+					DATE_ADD(DATE(#{keyword2}), INTERVAL 1 DAY)
+				</when>
+			</choose>
+		</if>
+	</select>
+
+	<!-- ptoList 메인페이지 -->
+	<select id="ptoListMain" resultType="AprvDTO" parameterType="AprvCriteria">
+		SELECT
+		*
+		FROM (
+		SELECT
+		a.pno,
+		a.empno,
+		e1.ename AS reqnm,
+		e1.dept,
+		e2.ename AS
+		aprvnm,
+		c2.codenm AS
+		deptnm,
+		a.ptotp,
+		c3.codenm AS ptotpnm,
+		a.stts,
+		c1.codenm AS sttsnm,
+		a.usp,
+		a.rjctnrea,
+		a.reqdt,
+		a.apprvldt
+		FROM aprv a
+		JOIN emp e1 ON a.empno =
+		e1.empno
+		LEFT JOIN emp e2 ON a.apprver =
+		e2.empno
+		JOIN ptoinfo p ON
+		a.empno = p.empno
+		JOIN code c1 ON a.stts =
+		c1.codenum
+		JOIN code c2 ON
+		e1.dept = c2.codenum
+		JOIN code c3 ON a.ptotp
+		= c3.codenum
+		WHERE a.empno =
+		#{sesEmpno}
+		ORDER BY
+		a.stts ASC, a.pno DESC
+		LIMIT 0,5
+		) AS result
+		ORDER BY
+		result.pno ASC
+	</select>
+
+
+	<!-- 신청 기초 정보 -->
+	<select id="getApplyInfo" resultType="AprvDTO">
+		SELECT
+		emp.EMPNO,
+		(p.pto +
+		p.addpto) as totalpto,
+		(p.pto + p.addpto - p.usdpto
+		- p.halfpto * 0.5)
+		as rstpto,
+		code.codenm
+		FROM
+		emp
+		JOIN
+		ptoinfo p
+		ON
+		emp.empno = p.empno
+		LEFT
+		JOIN
+		code
+		ON
+		emp.dept = code.codenum
+		where emp.empno=#{empno}
+	</select>
+
+	<!-- 신청 -->
+	<insert id="ptoApply" parameterType="AprvDTO" useGeneratedKeys="true" keyProperty="pno">
+		INSERT INTO aprv(empno,
+		usp, strdt, endt, ptotp, ptorea, reqdt)
+		VALUES(#{empno},#{usp},#{strdt},#{endt},#{ptotp},#{ptorea},now())
+	</insert>
+
+	<!-- 신청 내역 수정 -->
+	<update id="ptoModify" parameterType="AprvDTO">
+		update aprv
+		set ptotp =
+		#{ptotp},
+		usp= #{usp},
+		ptorea=#{ptorea},
+		strdt = #{strdt},
+		endt = #{endt},
+		reqdt=now()
+
+		where pno = #{pno}
+	</update>
+
+	<!-- 신청 내역 삭제 -->
+	<delete id="ptoDel" parameterType="java.lang.Integer">
+		DELETE FROM aprv WHERE pno =
+		#{pno}
+	</delete>
+
+	<!-- 결재 상세조회 -->
+	<select id="aprvDetail" parameterType="java.lang.Integer"
+		resultType="AprvDTO">
+		SELECT
+		a.pno,
+		a.empno,
+		e1.ename AS reqnm,
+		e2.ename AS aprvnm,
+		c2.codenm
+		as deptnm,
+		(p.pto + p.addpto) as totalpto,
+		(p.pto + p.addpto -
+		p.usdpto
+		- p.halfpto * 0.5) as rstpto,
+		a.ptotp,
+		c3.codenm as ptotpnm,
+		a.stts,
+		c1.codenm AS
+		sttsnm,
+		a.usp,
+		a.reqdt,
+		a.strdt,
+		a.endt,
+		a.ptorea,
+		a.rjctnrea,
+		a.apprvldt
+		FROM aprv a
+		JOIN emp e1 ON a.empno = e1.empno
+		LEFT
+		JOIN emp e2
+		ON
+		a.apprver = e2.empno
+		JOIN ptoinfo p ON a.empno = p.empno
+		JOIN code c1
+		ON
+		a.stts = c1.codenum
+		JOIN code c2 ON e1.dept = c2.codenum
+		JOIN code c3
+		ON
+		a.ptotp = c3.codenum
+		WHERE a.pno = #{pno}
+	</select>
+
+	<!-- 결재 -->
+	<update id="aprv" parameterType="AprvDTO">
+		UPDATE aprv
+		SET
+		stts = #{stts},
+		apprver = #{apprver},
+		rjctnrea = #{rjctnrea},
+		apprvldt = now()
+		WHERE pno
+		= #{pno}
+	</update>
+
+	<!-- 휴가갱신 -->
+	<update id="updatePTO" parameterType="AprvDTO">
+		UPDATE ptoinfo
+		SET usdpto =
+		usdpto + (SELECT usp FROM aprv WHERE pno = #{pno})
+		WHERE empno =
+		(SELECT empno FROM aprv WHERE pno = #{pno})
+	</update>
+
+	<!-- 반차갱신 -->
+	<update id="updateHalfPTO" parameterType="AprvDTO">
+		UPDATE ptoinfo
+		SET
+		halfpto = halfpto + (SELECT usp FROM aprv WHERE pno = #{pno})
+		WHERE
+		empno = (SELECT empno FROM aprv
+		WHERE pno = #{pno})
+	</update>
+	
+	<!-- 근태갱신 -->
+	<insert id="insertATST" parameterType="AprvDTO">
+	  <!-- attd 테이블에 데이터를 삽입합니다. -->
+	  INSERT INTO attd (empno, attdt, atst)
+	  SELECT 
+	    a.empno, 
+	    DATE_ADD(a.strdt, INTERVAL seq.n DAY) AS attdt,
+	    CASE 
+	      WHEN a.ptotp = 'T1' THEN 'A4'
+	      ELSE 'A5' 
+	    END
+	  FROM aprv a
+	  JOIN (
+	    SELECT seq.n
+	    FROM (
+	      SELECT 0 AS n UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9 UNION ALL 
+	      SELECT 10
+	    ) seq
+	  ) seq
+	  ON DATE_ADD(a.strdt, INTERVAL seq.n DAY) BETWEEN a.strdt AND a.endt
+	  WHERE a.pno = #{pno}
+	  ON DUPLICATE KEY UPDATE
+	    atst = VALUES(atst);
+	</insert>
+
+
+</mapper>

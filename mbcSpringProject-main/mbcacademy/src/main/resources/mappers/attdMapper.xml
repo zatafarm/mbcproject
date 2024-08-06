@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mbc.academy.mapper.attd">
+<select id= "gettoday" resultType = "Integer">
+SELECT
+    COUNT(*)
+FROM
+    attd
+WHERE
+    ATTDT = #{today} AND (atst = 'A0' OR atst = 'A1' OR atst = 'A3');
+</select>
+
+<select id="getallempno" resultType="attdDTO">
+  SELECT
+    emp.empno,
+    attd.atst,
+    attd.attdt
+FROM
+    emp
+LEFT JOIN attd ON emp.empno = attd.empno AND attd.attdt = CURDATE()
+WHERE
+    emp.RSG = 0
+    AND emp.empno != 'admin'
+    AND attd.empno IS NULL;
+
+
+</select>
+<select id="getgtwlist" resultType="attdDTO">
+select attd.empno ,attd.attdt , attd.STRTM , attd.entm , code.codenm 
+from attd left join code on attd.atst = code.codenum
+where empno = #{empno}
+and MONTH(attdt) = Month(curdate())
+AND YEAR(attdt) = YEAR(CURDATE())
+ORDER BY attd.attdt DESC
+     LIMIT 0,5
+
+</select>
+
+<insert id="inserttoday">
+INSERT INTO attd (empno, ATTDT) VALUES (#{empno}, CURDATE())
+</insert>
+
+<select id = "gtw" resultType = "java.lang.String">
+SELECT
+	atst
+from attd
+where empno = #{empno} and ATTDT = CURDATE()
+</select>
+
+<select id = "getsttime" resultType = "java.lang.String">
+SELECT
+	CODESE
+from code
+where CODENUM = 'STRTM'
+</select>
+
+<select id = "getentime" resultType = "java.lang.String">
+SELECT
+	CODESE
+from code
+where CODENUM = 'enTM'
+</select>
+
+<update id="atstchange">
+update attd
+   set STRTM = #{nowtime},
+   	   ATST  = #{atst}
+ where empno = #{empno} and ATTDT = CURDATE();
+</update>
+
+
+<update id="gowchange">
+    update attd
+    set enTM = #{nowtime},
+        ATST = #{atst}
+    where empno = #{empno} and ATTDT = CURDATE();
+</update>
+
+<update id="strtmchange">
+update
+	code
+	set codese = #{sttime}
+where CODENUM = 'STRTM'
+</update>
+<update id="endtmchange">
+update
+	code
+	set codese = #{entime}
+where CODENUM = 'ENTM'
+</update>
+
+<update id="pluscump">
+update emp
+   set  cump = cump + 1
+ where empno = #{empno}
+</update>
+<update id="pluscuma">
+update emp
+   set  cuma = (select count(*) from attd where empno = #{empno} and atst = 'A0' )
+ where empno = #{empno}
+</update>
+
+<select id="getgtwpluslist" resultType="attdDTO">
+select attd.empno ,attd.attdt , attd.STRTM , attd.entm , code.codenm 
+from attd left join code on attd.atst = code.codenum
+WHERE MONTH(attdt) = #{month}
+AND YEAR(attdt) = YEAR(CURDATE())
+And empno = #{empno}
+</select>
+</mapper>

@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mbc.academy.mapper.boardmapper">
+
+	<!-- 메인페이지 -->
+	<select id="getlist" resultType="MbcDTO">
+	SELECT board.bno, board.ttl, board.udtcnt, board.del, board.rprb
+	FROM mbc.board
+	WHERE board.del = 0 AND board.empno != 'admin'
+	ORDER BY board.regdt DESC
+	LIMIT 5
+	</select>
+	
+	<!-- 관리자 메인페이지 -->
+	<select id="listrprb" resultType="MbcDTO">
+	SELECT board.bno, board.ttl, board.del, board.rprb
+	FROM mbc.board
+	WHERE board.del = 0
+	ORDER BY board.rprb DESC
+	LIMIT 5
+	</select>
+	
+	<select id="getaumlist" resultType="MbcDTO">
+	SELECT 
+    board.bno, 
+    board.ttl, 
+    board.regdt, 
+    board.udtcnt, 
+    board.del,
+    board.chk
+	FROM 
+	    board 
+	JOIN 
+	    emp ON board.empno = emp.empno
+	WHERE 
+	    board.del = 0 AND emp.admns = 1
+	ORDER BY 
+	    board.chk DESC, board.bno DESC 
+	LIMIT 5
+	</select>
+
+	<!-- 사내게시판 -->
+
+	<!-- 글 전체목록 -->
+	<select id="list" resultType="MbcDTO"
+      parameterType="MbcCriteria">
+      SELECT * FROM (
+      SELECT b.bno, b.ttl, b.cnt, b.empno, e.ename, b.udtcnt,
+      b.regdt, b.rprb FROM board b JOIN emp e
+      ON
+      b.empno = e.empno
+      WHERE e.admns != 1
+      AND b.del=0
+      <if test="searchSelect != null and searchSelect == 'ttl'">
+         AND b.ttl LIKE CONCAT('%', #{keyword}, '%')
+      </if>
+      <if test="searchSelect != null and searchSelect == 'cnt'">
+         AND b.cnt LIKE CONCAT('%', #{keyword}, '%')
+      </if>
+      <if test="searchSelect != null and searchSelect == 'ename'">
+         AND ((#{keyword} = '익명' AND b.chk = 1)
+         OR (b.chk = 0 AND e.ename LIKE CONCAT('%', #{keyword}, '%')))
+      </if>      
+      ) AS result
+      ORDER BY result.bno desc
+      LIMIT #{pageStart}, #{perPageNum}
+   </select>
+
+	<!-- 글 전체목록 레코드 수 -->
+	<select id="getTotalCountBoard" resultType="int"
+		parameterType="MbcCriteria">
+		SELECT COUNT(*)
+		FROM board b JOIN emp e
+		ON
+		b.empno = e.empno
+		WHERE e.admns
+		!= 1
+		AND b.del=0
+		<if test="searchSelect != null and searchSelect == 'ttl'">
+			AND b.ttl LIKE CONCAT('%', #{keyword}, '%')
+		</if>
+		<if test="searchSelect != null and searchSelect == 'cnt'">
+			AND b.cnt LIKE CONCAT('%', #{keyword}, '%')
+		</if>
+		<if test="searchSelect != null and searchSelect == 'ename'">
+			AND e.ename LIKE CONCAT('%', #{keyword}, '%')
+		</if>
+	</select>
+
+	<!-- 내 글 전체목록 -->
+	<select id="mylist" resultType="MbcDTO"
+		parameterType="MbcCriteria">
+		SELECT *
+		FROM emp
+		JOIN board ON emp.empno = board.empno
+		WHERE emp.admns != 1
+		AND board.empno = #{sesEmpno}
+		AND (
+		(board.del = 1 AND board.delrea IS NOT NULL)
+		OR board.del = 0
+		)
+		ORDER BY
+		CASE
+		WHEN board.del = 1 AND board.delrea IS NOT NULL THEN 0
+		WHEN board.del = 0 THEN 1
+		ELSE 2
+		END,
+		CASE
+		WHEN board.del = 0 THEN
+		board.bno
+		ELSE NULL
+		END DESC
+		LIMIT #{pageStart}, #{perPageNum}
+	</select>
+
+	<!-- 내 글 레코드 수 -->
+	<select id="getTotalCountMyBoard" resultType="int"
+		parameterType="MbcCriteria">
+		SELECT COUNT(*)
+		FROM board JOIN emp
+		ON board.empno =
+		emp.empno
+		WHERE emp.admns != 1
+		AND emp.empno = #{sesEmpno}
+		AND (
+		(board.del = 1 AND board.delrea IS NOT NULL)
+		OR board.del = 0
+		)
+	</select>
+
+	<!-- 글 읽기 -->
+	<select id="detail" parameterType="java.lang.Integer"
+		resultType="MbcDTO">
+		select *
+		FROM emp JOIN board
+		ON emp.empno = board.empno
+		where
+		bno = #{bno}
+	</select>
+
+	<!-- 조회수 증가 -->
+	<update id="updateReadCnt" parameterType="java.lang.Integer">
+		update board
+		set
+		udtcnt = udtcnt + 1
+		where bno = #{bno}
+	</update>
+	
+	<!-- 신고 증가 -->
+	<update id="updateRprb" parameterType="java.lang.Integer">
+		update board
+		set
+		rprb = rprb + 1
+		where bno = #{bno}
+	</update>
+
+	<!-- 글 쓰기 -->
+	<insert id="register" parameterType="MbcDTO" useGeneratedKeys="true" keyProperty="bno">
+		INSERT INTO board(ttl,cnt, empno, regdt, udtcnt, del, chk)
+				   VALUES(#{ttl},#{cnt},#{empno},now(),0,0, #{chk})
+	</insert>
+
+
+	<!-- 글 수정 -->
+	<update id="update" parameterType="MbcDTO">
+		update board
+		set ttl =
+		#{ttl},
+		cnt= #{cnt},
+		udtdt = now(),
+		chk = #{chk}
+		where bno = #{bno}
+	</update>
+
+	<!-- 글 삭제 del 컬럼을 작성하여 1로 변경 이미 삭제된 게시글 삭제시 2 -->
+	<update id="delete" parameterType="java.lang.Integer">
+		UPDATE board set del = CASE
+		WHEN del = 1 THEN 2 ELSE 1 END
+		WHERE bno = #{bno};
+	</update>
+
+	<update id="admnDelete">
+		UPDATE board SET del = '1', delrea = #{delrea} WHERE
+		bno = #{bno}
+	</update>
+
+
+	<!-- 삭제 사유 저장 -->
+	<insert id="saveDeleteReason">
+		INSERT INTO board(bno, delrea)
+		VALUES (#{bno},
+		#{delrea})
+	</insert>
+
+	<!-- 공지사항 -->
+
+
+	<!-- 관리자 글 전체목록 -->
+	<select id="aumlist" resultType="MbcDTO"
+		parameterType="MbcCriteria">
+		SELECT * FROM (
+		    SELECT b.bno, b.ttl, b.cnt, b.empno, e.ename, b.udtcnt,
+		    b.regdt, b.rprb, b.chk,
+		    CASE 
+		        WHEN b.chk = 1 THEN 0
+		        ELSE 1
+		    END AS chk_order
+		    FROM board b JOIN emp e
+		    ON
+		    b.empno = e.empno
+		    WHERE e.admns = 1
+		    AND b.del = 0
+		    <if test="searchSelect != null and searchSelect == 'ttl'">
+		        AND b.ttl LIKE CONCAT('%', #{keyword}, '%')
+		    </if>
+		    <if test="searchSelect != null and searchSelect == 'cnt'">
+		        AND b.cnt LIKE CONCAT('%', #{keyword}, '%')
+		    </if>
+		) AS result
+		ORDER BY chk_order, result.bno DESC
+		LIMIT #{pageStart}, #{perPageNum}
+	</select>
+
+	<!-- 공지사항 레코드 수 -->
+	<select id="getTotalAum" resultType="int"
+		parameterType="MbcCriteria">
+		SELECT COUNT(*)
+		FROM board b JOIN emp e
+		ON
+		b.empno = e.empno
+		WHERE e.admns
+		= 1
+		AND b.del=0
+		<if test="searchSelect != null and searchSelect == 'ttl'">
+			AND b.ttl LIKE CONCAT('%', #{keyword}, '%')
+		</if>
+		<if test="searchSelect != null and searchSelect == 'cnt'">
+			AND b.cnt LIKE CONCAT('%', #{keyword}, '%')
+		</if>
+	</select>
+
+</mapper>

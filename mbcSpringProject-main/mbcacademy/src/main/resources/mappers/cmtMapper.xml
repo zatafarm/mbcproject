@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mbc.academy.mapper.cmtMapper">
+    <!-- 댓글 조회 -->
+    <select id="cmtList1" resultType="CmtDTO">
+        SELECT c.cno1, c.bno, c.empno, e.ename, c.cmt1, c.cmtdt1, c.cmtudt1, c.delc1
+        FROM cmt1 c
+        JOIN board b ON c.bno = b.bno
+        JOIN emp e ON c.empno = e.empno
+        WHERE c.bno = #{bno}
+    </select>
+    
+    <!-- 대댓글 조회 -->
+    <select id="cmtList2" resultType="CmtDTO">
+      SELECT c.cno2, c.cno1, e.ename, c.cmt2, c.cmtdt2, c.cmtudt2 ,c.delc2, c.rprc1 
+      FROM cmt2 c left Join emp e ON c.empno = e.empno
+      WHERE cno1=#{cno1} LIMIT 1 OFFSET #{selectcmt};
+		
+    </select>
+    <select id="countcno1" resultType="java.lang.Integer">
+      SELECT count(*) FROM cmt2 WHERE cno1=#{cno1}
+		
+    </select>
+    
+    <!-- 댓글 작성 -->
+    <insert id="cmtRegister1" parameterType="CmtDTO">
+        INSERT INTO cmt1(bno, empno, cmt1, cmtdt1)
+        VALUES(#{bno}, #{empno}, #{cmt1}, now())
+    </insert>
+    
+    <!-- 대댓글 작성 -->
+    <insert id="cmtRegister2" parameterType="CmtDTO">
+        INSERT INTO cmt2(cno1, empno, cmt2, cmtdt2)
+        VALUES(#{cno1}, #{empno}, #{cmt2}, now())
+    </insert>
+    
+    <!-- 댓글 수정 -->
+    <update id="cmtUpdate1" parameterType="CmtDTO">
+        UPDATE cmt1
+        SET cmt1 = #{cmt1}
+        WHERE cno1 = #{cno1}
+    </update>
+    
+    <!-- 대댓글 수정 -->
+    <update id="cmtUpdate2" parameterType="CmtDTO">
+        UPDATE cmt2
+        SET cmt2 = #{cmt2}
+        WHERE cno2 = #{cno2}
+    </update>
+    
+    <!-- 댓글 삭제 -->
+    <update id="delc1" parameterType="java.lang.Integer">
+        UPDATE cmt1
+        SET delc1 = CASE WHEN delc1 = 1 THEN 2 ELSE 1 END
+        WHERE cno1 = #{cno1};
+    </update>
+    
+    <!-- 대댓글 삭제 -->
+    <update id="delc2" parameterType="java.lang.Integer">
+        UPDATE cmt2
+        SET delc2 = CASE WHEN delc2 = 1 THEN 2 ELSE 1 END
+        WHERE cno2 = #{cno2};
+    </update>
+    
+    <!-- 댓글 신고 -->
+    <update id="updateRprb1" parameterType="java.lang.Integer">
+        UPDATE cmt1
+        SET rprb1 = rprb1 + 1
+        WHERE bno = #{bno}
+    </update>
+    
+        <!-- 댓글 포스트 주인 -->
+    <select id="getpostempno" resultType="java.lang.String">
+	select empno from board where bno = #{bno}
+    </select>
+    
+          <!-- cno1 list-->
+    <select id="cnolist" resultType="CmtDTO">
+	select cno1 from cmt1 where bno = #{bno}
+    </select>
+</mapper>

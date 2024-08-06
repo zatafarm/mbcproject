@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mbc.academy.mapper.empoly">
+<!-- 사원 리스트 -->
+<select id="getemplist" resultType="LEmpDTO" parameterType="LEmpDTO">
+  <![CDATA[
+SELECT 
+    emp.EMPNO,
+    emp.ENAME,
+    emp.CTEL,
+    emp.RANKS,
+    emp.PSTN,
+    code.codenm,
+    emp.cump,
+    emp.cuma
+FROM 
+    emp 
+LEFT JOIN 
+    code 
+ON 
+    emp.dept = code.codenum 
+where emp.EMPNO != "admin"  and RSG = 0
+ORDER BY code.codenm DESC
+ LIMIT #{pageStart}, #{perPageNum}
+   ]]>
+    
+</select>
+<select id="countlist" resultType="Integer">
+    <![CDATA[
+        SELECT
+            count(*)
+        FROM
+            emp
+        WHERE
+         EMPNO != "admin" and  RSG = 0
+    ]]>
+</select>
+<select id="searchcountlistdetp" resultType="Integer">
+    <![CDATA[
+SELECT
+    COUNT(*)
+FROM
+    emp 
+LEFT JOIN 
+    code 
+ON 
+    emp.dept = code.codenum 
+WHERE 
+    code.codenm LIKE CONCAT('%',#{searchText}, '%')
+    AND emp.EMPNO != 'admin'
+    AND emp.RSG = 0
+
+    ]]>
+</select>
+
+<select id="searchcountlistname" resultType="Integer">
+    <![CDATA[
+SELECT
+    COUNT(*)
+FROM
+    emp 
+LEFT JOIN 
+    code 
+ON 
+    emp.dept = code.codenum 
+WHERE 
+    emp.ename LIKE CONCAT('%',#{searchText}, '%')
+    AND emp.EMPNO != 'admin'
+    AND emp.RSG = 0
+
+    ]]>
+</select>
+<!-- 사원 상세 정보 -->
+<select id="getempdetail" resultType="LEmpDTO">
+SELECT 
+    emp.EMPNO,
+    emp.ENAME,
+    emp.CTEL,
+    emp.RANKS,
+    emp.PSTN,
+    code.codenm,
+    emp.cump,
+    emp.cuma
+FROM 
+    emp 
+LEFT JOIN 
+    code 
+ON 
+    emp.dept = code.codenum 
+where emp.empno=#{empno}
+</select>
+
+<!-- 부서검색 -->
+<select id="getempsearchdetp" resultType="LEmpDTO">
+SELECT 
+    emp.EMPNO,
+    emp.ENAME,
+    emp.CTEL,
+    emp.RANKS,
+    emp.PSTN,
+    code.codenm,
+            emp.cump,
+    emp.cuma
+FROM 
+    emp 
+LEFT JOIN 
+    code 
+ON 
+    emp.dept = code.codenum 
+where code.codenm LIKE CONCAT('%', #{searchText}, '%')
+and emp.empno != 'admin' and emp.RSG = 0
+        LIMIT #{PageStart}, #{PerPageNum}
+</select>
+<!-- 이름검색 -->
+<select id="getempsearchname" resultType="LEmpDTO">
+SELECT 
+    emp.EMPNO,
+    emp.ENAME,
+    emp.CTEL,
+    emp.RANKS,
+    emp.PSTN,
+    code.codenm,
+            emp.cump,
+    emp.cuma
+FROM 
+    emp 
+LEFT JOIN 
+    code 
+ON 
+    emp.dept = code.codenum 
+where emp.ENAME LIKE CONCAT('%', #{searchText}, '%')
+and emp.empno != 'admin' and emp.RSG = 0
+        LIMIT #{PageStart}, #{PerPageNum}
+</select>
+<!-- 로그인 -->
+<select id="getallList" resultType="LEmpDTO" >
+		SELECT e.empno, e.ename, e.hrdt, e.pwd , e.bri , e.tel , e.ctel , e. email , e.adr , e.dept,
+		c.codenm, e.pstn, e.sal, e.admns , e.ranks , e.rsg , e.rsgdt FROM emp e JOIN code c ON
+		e.dept = c.codenum
+		where empno = #{userID}
+		
+</select>
+
+<update id="changepw">
+    UPDATE emp
+    SET PWD = #{cpw2}
+    WHERE empno = #{userID}
+    
+</update>
+
+<update id="updateprofile">
+    UPDATE emp
+    SET email = #{chemail} , adr = #{chadr} , tel = #{chp} , ctel = #{chctel}
+    WHERE empno = #{userID}
+    
+</update>
+
+<update id="updateadminempoly" parameterType="EmpDTO">
+    UPDATE emp
+    SET 
+        ename = #{ename},
+        bri = #{bri},
+        tel = #{tel},
+        ctel = #{ctel},
+        email = #{email},
+        adr = #{adr},
+        hrdt = #{hrdt},
+        dept = #{dept},
+        ranks = #{ranks},
+        pstn = #{pstn},
+        sal = #{sal},
+        admns = #{admns}
+    WHERE empno = #{empno}
+</update>
+
+<!-- 아이디, 이메일 존재 여부 확인 -->
+<select id="checkUser" resultType="int" >
+select count(*)
+from emp
+where empno = #{empno}
+  AND email = #{email}
+</select>
+
+<!-- 비밀번호 재설정 -->
+<update id="newPwUpdate">
+update emp
+   set pwd = #{newPw}
+ where empno = #{empno}
+</update>
+
+<update id="deleteemp">
+update emp
+   set RSG = 1,
+   RSGDT = #{Rdate}
+ where empno = #{empno}
+</update>
+
+
+
+
+</mapper>

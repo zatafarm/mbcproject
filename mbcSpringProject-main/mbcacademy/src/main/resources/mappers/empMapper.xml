@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mbc.academy.empMapper">
+
+	<!-- 사원등록(EMP) -->
+	<insert id="insertEmp" parameterType="EmpDTO">
+		INSERT
+		INTO emp(empno,
+		ename,
+		pwd, bri, tel, ctel, email, adr, hrdt, dept, ranks, pstn, sal,
+		admns)
+		VALUES(#{empno}, #{ename}, #{empno}, #{bri}, #{tel}, #{ctel},
+		#{email}, #{adr},
+		#{hrdt}, #{dept}, #{ranks}, #{pstn}, #{sal},
+		#{admns})
+	</insert>
+
+	<!-- 사원등록(PTOINFO) -->
+	<insert id="insertPtoInfo" parameterType="EmpDTO">
+		INSERT
+		INTO ptoinfo
+		(empno, pto)
+		VALUES (#{empno}, #{pto})
+	</insert>
+
+	<!-- 사번자동생성(특정 년도의 사원수) -->
+	<select id="atGnrEmpno" parameterType="java.lang.String"
+		resultType="java.lang.Integer">
+		SELECT COUNT(*)
+		FROM emp
+		WHERE empno LIKE CONCAT(#{year},
+		'%')
+	</select>
+
+	<!-- 사원 전체목록 -->
+	<select id="list" resultType="EmpDTO">
+		SELECT e.empno, e.ename, e.hrdt,
+		c.codenm, e.ranks, e.pstn, e.sal, e.admns FROM emp e JOIN code c ON
+		e.dept = c.codenum
+	</select>
+
+	<!-- 부서와 권한을 기준으로 직원을 조회 -->
+	<select id="getEmployeesByDeptAndAdmns"
+		resultType="com.mbc.academy.emp.EmpDTO">
+		SELECT * FROM emp WHERE dept = #{dept} AND admns = #{admns}
+	</select>
+
+	<!-- 직원정보변경 검색 -->
+	<select id="searchEmpChn"
+		resultType="com.mbc.academy.emp.EmpDTO"
+		parameterType="java.lang.String">
+		SELECT e.empno, e.ename, c.codenm,
+		CASE
+		WHEN e.pstn = 0 THEN '총책임자'
+		WHEN e.pstn = 1 THEN '팀장'
+		WHEN e.pstn = 2 THEN '팀원'
+		ELSE 'ERROR'
+		END AS pstnm
+		FROM emp e
+		JOIN code c ON e.dept = c.codenum
+		WHERE empno = #{empno}
+	</select>
+</mapper>

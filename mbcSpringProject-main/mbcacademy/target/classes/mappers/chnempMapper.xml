@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mbc.academy.chnempMapper">
+
+
+	<!-- 정보 요청 내역 -->
+	<select id="empChnList" resultType="ChnempDTO"
+		parameterType="ChnempCriteria">
+		SELECT
+		*
+		FROM (
+		SELECT
+		ch.chno,
+		ch.apl,
+		e1.ename as reqnm,
+		e2.ename as
+		whochnnm,
+		ch.whochn,
+		c.codenm as deptnm,
+		ch.reqdt,
+		ch.resdt,
+		ch.typchn,
+		ch.chndept,
+		ch.chnpstn,
+		ch.res
+		FROM chnempinf ch
+		JOIN emp e1 ON ch.apl =
+		e1.empno
+		LEFT JOIN emp e2 ON ch.whochn = e2.empno
+		JOIN code c ON e1.dept
+		= c.codenum
+		<choose>
+			<when test="sesEmpno != 'admin'">
+				WHERE ch.apl = #{sesEmpno}
+				<if test="searchField != null and searchField != ''">
+					AND
+				</if>
+			</when>
+			<when test="searchField != null and searchField != ''">
+				WHERE
+			</when>
+		</choose>
+		<if test="searchField != null and searchField != ''">
+			<choose>
+				<when test="searchField == 'reqnm'">
+					AND e1.ename LIKE CONCAT('%', #{keyword}, '%')
+				</when>
+				<when test="searchField == 'whochnnm'">
+					AND e2.ename LIKE CONCAT('%', #{keyword}, '%')
+				</when>
+				<when test="searchField == 'typchn'">
+					AND ch.typchn LIKE CONCAT('%', #{keyword}, '%')
+				</when>
+				<when test="searchField == 'reqdt'">
+					AND ch.reqdt BETWEEN DATE(#{keyword}) AND
+					DATE_ADD(DATE(#{keyword2}), INTERVAL 1 DAY)
+				</when>
+				<when test="searchField == 'resdt'">
+					AND ch.resdt BETWEEN DATE(#{keyword}) AND
+					DATE_ADD(DATE(#{keyword2}), INTERVAL 1 DAY)
+				</when>
+			</choose>
+		</if>
+		) AS result
+		ORDER BY
+		<choose>
+			<when test="column == 'res'"> result.res ${sortOrder} </when>
+			<when test="column == 'reqnm'"> result.reqnm ${sortOrder} </when>
+			<when test="column == 'typchn'"> result.typchn ${sortOrder} </when>
+			<when test="column == 'reqdt'"> result.reqdt ${sortOrder} </when>
+			<when test="column == 'resdt'"> result.resdt ${sortOrder} </when>
+			<otherwise> result.res ASC</otherwise>
+		</choose>
+		, result.chno ASC
+		LIMIT #{pageStart}, #{perPageNum}
+	</select>
+
+	<select id="empChnMainList" resultType="ChnempDTO">
+		SELECT	ch.chno,
+				ch.apl,
+				e1.ename as reqnm,
+				ch.reqdt,
+				ch.typchn,
+				ch.res
+		  FROM	chnempinf ch
+		  JOIN	emp e1 ON ch.apl = e1.empno
+		 WHERE	ch.res = 0
+	  ORDER BY	ch.chno ASC;
+	</select>
+	
+	<!-- 전체 레코드 수 -->
+	<select id="getTotalCountChnemp" resultType="int"
+		parameterType="ChnempCriteria">
+		SELECT COUNT(*)
+		FROM chnempinf ch
+		JOIN emp e1 ON ch.apl = e1.empno
+		LEFT
+		JOIN emp e2 ON ch.whochn = e2.empno
+		<choose>
+			<when test="sesEmpno != 'admin'">
+				WHERE ch.apl = #{sesEmpno}
+				<if test="searchField != null and searchField != ''">
+					AND
+				</if>
+			</when>
+			<when test="searchField != null and searchField != ''">
+				WHERE
+			</when>
+		</choose>
+		<if test="searchField != null and searchField != ''">
+			<choose>
+				<when test="searchField == 'reqnm'">
+					AND e1.ename LIKE CONCAT('%', #{keyword}, '%')
+				</when>
+				<when test="searchField == 'whochnnm'">
+					AND e2.ename LIKE CONCAT('%', #{keyword}, '%')
+				</when>
+				<when test="searchField == 'typchn'">
+					AND ch.typchn LIKE CONCAT('%', #{keyword}, '%')
+				</when>
+				<when test="searchField == 'reqdt'">
+					AND ch.reqdt BETWEEN DATE(#{keyword}) AND
+					DATE_ADD(DATE(#{keyword2}), INTERVAL 1 DAY)
+				</when>
+				<when test="searchField == 'resdt'">
+					AND ch.resdt BETWEEN DATE(#{keyword}) AND
+					DATE_ADD(DATE(#{keyword2}), INTERVAL 1 DAY)
+				</when>
+			</choose>
+		</if>
+	</select>
+
+	<!-- 상세조회 -->
+	<select id="empChnDetail" parameterType="java.lang.Integer"
+		resultType="ChnempDTO">
+		SELECT
+		ch.chno,
+		ch.apl,
+		e1.ename as reqnm,
+		e2.ename as
+		whochnnm,
+		ch.whochn,
+		c1.codenm as reqdeptnm,
+		ch.reqdt,
+		ch.resdt,
+		ch.typchn,
+		ch.chndept,
+		ch.predept,
+		c2.codenm as chndeptnm,
+		c3.codenm as predeptnm, 
+		ch.chnpstn,
+		ch.prepstn,
+		ch.res
+		FROM chnempinf ch
+		JOIN emp e1 ON ch.apl =
+		e1.empno
+		LEFT JOIN emp e2 ON ch.whochn = e2.empno
+		JOIN code c1 ON e1.dept
+		= c1.codenum
+		LEFT JOIN code c2 ON ch.chndept
+		= c2.codenum
+		JOIN code c3 ON ch.predept
+		= c3.codenum
+		WHERE ch.chno = #{chno}
+	</select>
+
+	<!-- 처리 완료 -->
+	<update id="confirmChn" parameterType="ChnempDTO">
+		UPDATE chnempinf
+		SET
+		res =
+		1,
+		resdt = now()
+		WHERE chno = #{chno}
+	</update>
+
+	<!-- 신청 내역 삭제 -->
+	<delete id="empChnDel" parameterType="java.lang.Integer">
+		DELETE FROM chnempinf
+		WHERE
+		chno = #{chno}
+	</delete>
+
+	<!-- 정정 신청 -->
+	<insert id="empChnApply" parameterType="ChnempDTO" useGeneratedKeys="true" keyProperty="chno">
+		INSERT INTO
+		chnempinf(apl, whochn, typchn, chndept, predept, chnpstn, prepstn, reqdt)
+		VALUES(#{apl},
+		#{whochn}, #{typchn}, #{chndept}, #{predept}, #{chnpstn}, #{prepstn}, now())
+	</insert>
+
+	<!-- 정정 신청 수정 -->
+	<update id="empChnModify" parameterType="ChnempDTO">
+		UPDATE chnempinf
+		SET
+		typchn = #{typchn},
+		chndept = #{chndept},
+		chnpstn = #{chnpstn},
+		reqdt = now()
+		WHERE
+		chno = #{chno}
+	</update>
+
+</mapper>

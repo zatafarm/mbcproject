@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+        http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+        http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+    
+   
+    <bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
+        <property name="driverClassName" value="net.sf.log4jdbc.sql.jdbcapi.DriverSpy"/>
+        <property name="jdbcUrl" value="jdbc:log4jdbc:mysql://localhost:3306/mbc"/>
+        <property name="username" value="root"/>
+        <property name="password" value="eze123"/>
+        
+    </bean>
+    
+    <bean id="ds" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+        <constructor-arg ref="hikariConfig"/>
+    </bean>
+    
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="ds"/>
+		<property name="configLocation" value="classpath:mybatis-config.xml"></property>
+		<property name="mapperLocations" value="classpath:mappers/*.xml"></property>
+    </bean>
+ 
+    <bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate" destroy-method="clearCache">
+        <constructor-arg ref="sqlSessionFactory"/>
+    </bean>
+	 <!-- 파일 업로드를 위한 MutipartResolver 구현체 CommonsMultipartResolver bean 등록 -->
+	<bean id="multipartResolver"
+	class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+	   <property name="maxUploadSize" value="104857600" />
+	   <property name="maxUploadSizePerFile" value="104857600" />
+	   <property name="maxInMemorySize" value="104857600" />
+	   <property name="defaultEncoding" value="utf-8" />
+	</bean>
+ 
+    <mybatis-spring:scan base-package="com.mbc.academy.mapper"/>
+ 
+ 
+  
+    <context:component-scan base-package="com.mbc.academy"/>
+    
+        
+</beans>
+ 

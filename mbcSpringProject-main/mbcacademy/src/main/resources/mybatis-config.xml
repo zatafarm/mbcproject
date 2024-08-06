@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<typeAliases>
+		<typeAlias alias="Criteria" type="com.mbc.academy.Criteria"/>
+		<typeAlias alias="AprvCriteria" type="com.mbc.academy.aprv.AprvCriteria"/>
+		<typeAlias alias="EmpDTO" type="com.mbc.academy.emp.EmpDTO"/>
+		<typeAlias alias="AttdDTO" type="com.mbc.academy.attd.AttdDTO"/>
+		<typeAlias alias="CodeDTO" type="com.mbc.academy.code.CodeDTO"/>
+		<typeAlias alias="AprvDTO" type="com.mbc.academy.aprv.AprvDTO"/>
+		<typeAlias alias="LEmpDTO" type="com.mbc.academy.empolyloginandsearch.LEmpDTO"/>
+		<typeAlias alias="MbcDTO" type="com.mbc.academy.board.MbcDTO"/>
+		<typeAlias alias="MbcCriteria" type="com.mbc.academy.board.MbcCriteria"/>
+		<typeAlias alias="ChnempDTO" type="com.mbc.academy.chnemp.ChnempDTO"/>
+		<typeAlias alias="ChnempCriteria" type="com.mbc.academy.chnemp.ChnempCriteria"/>
+		<typeAlias alias="CmtDTO" type="com.mbc.academy.cmt.CmtDTO"/>
+		<typeAlias alias="alarmdto" type="com.mbc.academy.socket.alarmDTO"/>
+	</typeAliases>
+</configuration>
